@@ -216,3 +216,106 @@ password:cisco
 dir
 put test.txt
 dir
+
+
+Sending files from Laptop to server using FTP using Python
+├── server.py
+├── client.py
+├── abc.txt
+-----------------------------------------------------------------
+|                            SERVER.PY                          |
+-----------------------------------------------------------------
+import socket
+
+HOST = "localhost"
+PORT = 5000
+FORMAT = "utf-8"
+
+# Create TCP socket
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Bind IP and port
+server.bind((HOST, PORT))
+
+# Wait for client
+server.listen(1)
+
+print("Waiting for connection...")
+
+# Accept client
+conn, addr = server.accept()
+
+print("Connected by:", addr)
+
+# Receive filename
+filename = conn.recv(1024).decode(FORMAT)
+
+print("Receiving file:", filename)
+
+# Send acknowledgement
+conn.send("Filename received".encode(FORMAT))
+
+# Open file to save data
+file = open(filename, "wb")
+
+# Receive file data continuously
+while True:
+
+    data = conn.recv(1024)
+
+    if not data:
+        break
+
+    file.write(data)
+
+print("File received successfully")
+
+# Close everything
+file.close()
+conn.close()
+server.close()
+
+-----------------------------------------------------------------
+|                            CLIENT.PY                          |
+-----------------------------------------------------------------
+
+import socket
+
+HOST = "localhost"
+PORT = 5000
+FORMAT = "utf-8"
+
+FILE_NAME = "abc.txt"
+
+# Create TCP socket
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Connect to server
+client.connect((HOST, PORT))
+
+# Send filename
+client.send(FILE_NAME.encode(FORMAT))
+
+# Receive acknowledgement
+msg = client.recv(1024).decode(FORMAT)
+
+print(msg)
+
+# Open file
+file = open(FILE_NAME, "rb")
+
+# Send file data continuously
+while True:
+
+    data = file.read(1024)
+
+    if not data:
+        break
+
+    client.send(data)
+
+print("File sent successfully")
+
+# Close everything
+file.close()
+client.close()
